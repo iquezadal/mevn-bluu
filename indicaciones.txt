@@ -1,0 +1,171 @@
+Comienzo del proyecto
+
+Para comenzar presionamos en una carpeta vacia:
+  npm init --yes
+
+  -- con esto creamos el archivo package.json
+  -- el --yes es para que llene por defecto las configuraciones
+
+
+Luego instalamos express, que nos ayudara a crear un servidor
+de una manera más sencilla junto a nodejs.
+
+   -- npm install express --save
+
+creamos app.js para llamar algunos modulos y configurar el
+servidor:
+
+
+//configuramos express
+const express = require('express');
+const app = express();
+
+// le damos la ruta
+app.get('/', function (req, res) {
+  res.send('Hello World!');
+});
+
+//Le damos el puerto
+app.listen(3000, function () {
+  console.log('Example app listening on port 3000!');
+});
+
+
+Luego para correr la configuracion anterior en terminal:
+    node app.js 
+
+******************************************************+
+
+Nodemon 
+
+Instalaremos nodemon para que se actualice solo el paquete
+
+npm install -g nodemon
+
+Luego, debemos mencionarlo en el package.json , dentro de
+scripts, insetamos:    
+
+     "dev": "nodemon app.js"
+
+Ahora ejecutamos con:
+     npm run dev 
+
+
+********************************************************
+
+Cambiamos la configuracion a variables
+
+Debemos indicar que el puerto a escuchar será por defecto,
+el que nos de el hosting y si no le damos uno nosotros.
+
+Por lo que debemos cambiar la configuracion inicial por: 
+
+//configuramos el puerto con variables
+app.set('puerto', process.env.PORT || 3000);
+app.listen(app.get('puerto'), function () {
+  console.log('Example app listening on port'+ app.get('puerto'));
+});
+
+
+*****************************************************************
+
+Instalar Morgan
+
+Nos sirve para visualizar en terminal, las peticiones que se realicen al servidor
+Es un middelware, por lo que se inicia antes que se ejecute la app
+
+De esta manera se configura:
+
+const morgan = require('morgan');
+app.use(morgan('tiny'));
+
+**********************************************
+Instalar CORS 
+
+Sirve para que puedan hacer peticiones a nuestro servidor 
+desde otros dominios
+
+      npm install cors --save
+
+Luego lo configuramos 
+
+   const cors = require('cors');
+   app.use(cors());
+
+**********************************************
+
+configuracion json
+
+Este ya viene en express, por lo que solo se debe configurar 
+
+    app.use(express.json());
+    
+    //application/x-www-form-urlencoded
+    app.use(express.urlencoded({ extended: true }))
+
+*************************************************
+
+Configuracion ruta estatica
+
+Estas rutas estaran en la carpeta public 
+
+1. en public creamos un index.html 
+2. en app.js lo configuramos:
+
+   // Para acceder al directorio actual
+   const path = require('path');
+
+   app.use(express.static(path.join(__dirname, 'public')));
+
+
+**************************************************
+
+Modo history vue 
+
+Cuando usemos vue, el modo history puede traernos problemas
+por lo que agregaremos la siguiente configuracion , con el fin que eso no 
+suceda.
+
+1. instalamos:
+      npm install --save connect-history-api-fallback
+
+2. sobreescribimos la parte del express.static que agregamos en el punto
+   anterior:
+        // Middleware para Vue.js router modo history
+        const history = require('connect-history-api-fallback');
+        app.use(history());
+        app.use(express.static(path.join(__dirname, 'public')));
+
+**********************************************************+
+
+Resumen configuracion
+
+Para ver un resumen de como debeia quedar
+
+https://bluuweb.github.io/mevn/01-primeros-pasos/#resumen
+
+*****************************************************+
+
+Instalar babel
+
+1. npm install -D @babel/core @babel/cli @babel/preset-env @babel/node
+2. Creamos el archivo .babelrc y agregamos:
+    {
+  "presets": ["@babel/preset-env"]
+   }
+***esto nos sirve para que compile todo a version que se entienda
+   por los servidores
+
+3. lo agregamos al package.json
+
+    en scripts: "devbabel": "nodemon app.js --exec babel-node"
+
+
+
+
+
+
+
+
+
+
