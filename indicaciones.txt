@@ -160,8 +160,264 @@ Instalar babel
 
     en scripts: "devbabel": "nodemon app.js --exec babel-node"
 
+Ahora podemos cambiar los require por imports
+
+Copiamos y pegamos todo ordenado 
+
+***********************************************************+
+
+Subiendo a Heroku
+
+1. agregamos .gitignore
+2. modificamos el package.json:
+      agregamos start en scripts:
+         "start": "babel-node app.js --exec",
+
+      copiamos todas las dependencias de babel de dev a dependencies:
+        "@babel/cli": "^7.13.16",
+        "@babel/core": "^7.13.16",
+        "@babel/node": "^7.13.13",
+        "@babel/preset-env": "^7.13.15"
 
 
+3. subir a github
+4. subir a Heroku
+
+****************************************************************
+
+Bases de Datos
+
+Para esto usaremos mongodb compass
+
+****************************************
+
+Instarlar Mongoose 
+
+Este paquete nos ayudara para conectar la base de mongo 
+con nuestro servidor
+
+https://mongoosejs.com/
+
+instalamos:
+  npm install mongoose --save
+
+lo configuramos:
+
+// Conexión base de datos
+const mongoose = require('mongoose');  --- puede ser asi o con import 
+
+const uri = 'mongodb://localhost:27017/myapp';
+const options = {useNewUrlParser: true, useCreateIndex: true};
+
+// Or using promises
+mongoose.connect(uri, options).then(
+  /** ready to use. The `mongoose.connect()` promise resolves to mongoose instance. */
+  () => { console.log('Conectado a DB') },
+  /** handle initial connection error */
+  err => { console.log(err) }
+);
+
+*********************************************************
+
+Instalar mongodb community en mac 
+
+1. brew tap mongodb/brew 
+2. brew search mongodb-community
+3. brew install mongodb-community
+4. brew services start mongodb-community
+
+*********************************************************
+
+Schemas 
+
+Son estandarizaciones de nuestros documentos
+Cada documento tendra un nombre , descripcion y datos a almacenar
+
+1. creamos carpeta models
+2. adentro crearemos los schemas 
+
+ej:
+
+nota.js
+
+import mongoose from 'mongoose';
+
+//funcionalidad de schemas
+const Schema = mongoose.Schema;
+
+//estructura del schema
+const notaSchema = new Schema({
+  nombre: {type: String, required: [true, 'Nombre obligatorio']},
+  descripcion: String,
+  usuarioId: String,
+  date:{type: Date, default: Date.now},
+  activo: {type: Boolean, default: true}
+});
+
+// Convertir a modelo a exportar
+const Nota = mongoose.model('Nota', notaSchema);
+
+export default Nota;
+
+***************************************************
+
+Ruta POST
+
+1. creamos carpeta routes
+2. creamos un archivo de ruta
+
+ej: ruta.js 
+
+//importamos la funcionalidad de rutas de express
+import express from 'express';
+const router = express.Router();
+
+// importar el modelo nota
+import Nota from '../models/nota';
+
+// Agregar una nota
+router.post('/nueva-nota', async(req, res) => {
+  const body = req.body;  //envio de los requerimientos -- nombre,descripcion, usuarioId
+  try {
+    const notaDB = await Nota.create(body); //Guardamos en la base de datos -- create -- funcionalidad de crear una nota y que obtendra el modelo
+    res.status(200).json(notaDB); //lo enviamos
+  } catch (error) {
+    return res.status(500).json({
+      mensaje: 'Ocurrio un error',
+      error
+    })
+  }
+});
+
+// Exportamos la configuración de express app
+module.exports = router;
+
+
+
+3. configurar en app.js
+
+app.use('/api', require('./routes/nota'));
+
+**********************************************************
+
+Postman
+
+Probar funcionalidad:
+
+1. nueva collecion
+2. nuevo request 
+3. method post
+4. coloco la ruta: ej : localhost:3000/api/nueva-nota
+5. voy a body 
+6. form www 
+7. ingreso los parametros del schema con los datos
+8. envio y listo 
+
+
+********************************************************
+
+Get con parametros
+
+// Get con parámetros
+
+Lo usaremos para leer segun los id de las notas 
+
+router.get('/nota/:id', async(req, res) => {
+  const _id = req.params.id;
+  try {
+    const notaDB = await Nota.findOne({_id});
+    res.json(notaDB);
+  } catch (error) {
+    return res.status(400).json({
+      mensaje: 'Ocurrio un error',
+      error
+    })
+  }
+});
+
+// Get con todos los documentos
+router.get('/nota', async(req, res) => {
+  try {
+    const notaDb = await Nota.find();
+    res.json(notaDb);
+  } catch (error) {
+    return res.status(400).json({
+      mensaje: 'Ocurrio un error',
+      error
+    })
+  }
+});
+
+***********************************************************
+
+DELETE
+
+// Delete eliminar una nota
+router.delete('/nota/:id', async (req, res) => {
+    const _id = req.params.id;
+    try {
+        const notaDb = await Nota.findByIdAndDelete({ _id });
+        if (!notaDb) {
+            return res.status(400).json({
+                mensaje: 'No se encontró el id indicado',
+                error
+            })
+        }
+        res.json(notaDb);
+    } catch (error) {
+        return res.status(400).json({
+            mensaje: 'Ocurrio un error',
+            error
+        })
+    }
+});
+
+
+****************************************************
+
+PUT
+
+// Put actualizar una nota
+router.put('/nota/:id', async (req, res) => {
+    const _id = req.params.id;
+    const body = req.body;
+    try {
+        const notaDb = await Nota.findByIdAndUpdate(
+            _id,
+            body,
+            { new: true }); ----- esto es para que actualice en la base de datos
+        res.json(notaDb);
+    } catch (error) {
+        return res.status(400).json({
+            mensaje: 'Ocurrio un error',
+            error
+        })
+    }
+});
+
+
+**********************************************************
+
+Llevar todo a produccion
+
+1. cuenta en mongo db atlas 
+2. configuro un usuairo (copio el user y la contraseña)
+3. Le doy acceso a todas las ip 
+4. Le doy connect al cluster
+5. escojo conectar con app 
+6. copio la url 
+
+
+7. cambio la uri en app.js 
+
+    - cambio el user
+    - cambio el password 
+    - le coloco un nombre a la db -- donde dice primera base antes de retry
+
+
+************************************
+
+subir a heroku 
 
 
 
